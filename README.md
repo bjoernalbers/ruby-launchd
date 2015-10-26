@@ -3,8 +3,6 @@
 Ruby-Launchd is like launchctl (or the famous lunchy). It lets you easily
 create, start and stop services on Mac OS X, but with Ruby. 
 
-**NOTE: This is currently just the README without any code!**
-
 
 ## Installation
 
@@ -22,29 +20,19 @@ Or install it yourself as:
 
     $ gem install launchd
 
+
 ## Usage
 
-A new service requires a label (in reverse-domain-notation) and the actual
-command to run as array:
+Deploy (install & restart) a service:
 
 ```Ruby
-service = Launchd.new 'com.example.chunkybacon', %w(/usr/sbin/chunkyd --bacon)
+service = Launchd::Service.new 'com.example.chunkybacon', # Label of service
+  program_arguments: %w(/usr/sbin/chunkyd --bacon), # command line as array
+  keep_alive: true # Shall launchd keep it running?
+service.deploy
 ```
 
-Then start and stop it with...
-
-```Ruby
-service.start # Starts the service if not already running.
-service.stop  # Stops the service unless already stopped.
-```
-
-Both return `true` on success or `false` otherwise, i.e. if a job was already running.
-
-Use the bang-version to forcefully overwrite an already running service:
-
-```Ruby
-service.start! # Stops, updates and starts service, no matter if it's running or not.
-```
+**NOTE: All options are also required!**
 
 
 ## Development

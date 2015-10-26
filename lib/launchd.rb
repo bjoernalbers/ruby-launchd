@@ -1,4 +1,7 @@
-require "launchd/version"
+require 'plist'
+
+require 'launchd/version'
+require 'launchd/service'
 
 module Launchd
   # Your code goes here...
