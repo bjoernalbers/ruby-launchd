@@ -1,20 +1,23 @@
 module Launchd
   class Service
-    attr_reader :label
+    attr_reader :options, :label
 
-    def initialize(label, opts = {})
-      @label = label
-      @opts = opts
+    # NOTE: Only *label* and *program_arguments* are required.
+    # See `man launchd.plist` for all possible properties.
+    #
+    def initialize(opts = {})
+      @options = opts
+      @label = opts.fetch(:label)
     end
 
-    # Deploy (install & restart) the service.
+    # restart (install & restart) the service.
     #
     # If running as root, it will get installed as system-wide daemon,
     # otherwise as agent.
     #
-    def deploy
+    def restart
       stop if running?
-      write_plist
+      save
       start
     end
 
@@ -33,10 +36,12 @@ module Launchd
       !!system("launchctl list #{label}")
     end
 
+    alias_method :to_hash, :options
+
     private
 
     # Save actual plist to disk.
-    def write_plist
+    def save
       File.open(plist_path, 'w') do |file|
         file.puts properties.to_plist
       end
@@ -58,13 +63,13 @@ module Launchd
       Process.euid.zero?
     end
 
-    # Returns hash of plist properties.
+    # Returns hash of properties with CamelCase-keys.
     def properties
-      {
-        'Label' => label,
-        'ProgramArguments' => @opts[:program_arguments],
-        'KeepAlive' => @opts[:keep_alive]
-      }
+      options.inject({}) do |memo, (k,v)|
+        camel_cased_key = k.to_s.split('_').map(&:capitalize).join
+        memo[camel_cased_key] = v
+        memo
+      end
     end
   end
 end

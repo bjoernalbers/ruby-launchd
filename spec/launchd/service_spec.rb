@@ -3,7 +3,7 @@ require 'spec_helper'
 module Launchd
   describe Service do
     let(:service) do
-      Service.new('com.example.service',
+      Service.new(label: 'com.example.service',
                   program_arguments: ['service'],
                   keep_alive: true)
     end
@@ -18,23 +18,23 @@ module Launchd
       end
     end
 
-    describe '#deploy' do
+    describe '#restart' do
       before do
         allow(service).to receive(:stop)
         allow(service).to receive(:running?)
         allow(service).to receive(:start)
-        allow(service).to receive(:write_plist)
+        allow(service).to receive(:save)
       end
 
       context 'when not running' do
         before do
           allow(service).to receive(:running?).and_return(false)
-          service.deploy
+          service.restart
         end
 
         it 'writes plist and starts' do
           expect(service).not_to have_received(:stop)
-          expect(service).to have_received(:write_plist).ordered
+          expect(service).to have_received(:save).ordered
           expect(service).to have_received(:start).ordered
         end
       end
@@ -42,12 +42,12 @@ module Launchd
       context 'when running' do
         before do
           allow(service).to receive(:running?).and_return(true)
-          service.deploy
+          service.restart
         end
 
         it 'stops, overwrites plist and starts ' do
           expect(service).to have_received(:stop).ordered
-          expect(service).to have_received(:write_plist).ordered
+          expect(service).to have_received(:save).ordered
           expect(service).to have_received(:start).ordered
         end
       end
@@ -87,7 +87,7 @@ module Launchd
       end
     end
 
-    describe '#write_plist' do
+    describe '#save' do
       let(:tmp) do
         tmp = basedir.join('tmp')
         FileUtils.mkdir tmp unless File.directory? tmp
@@ -118,7 +118,7 @@ EOS
         plist = tmp.join('com.example.service.plist')
         FileUtils.rm(plist) if File.exists?(plist)
 
-        service.send(:write_plist)
+        service.send(:save)
 
         actual_plist = File.read(plist)
         expect(actual_plist).to eq expected_plist
@@ -157,13 +157,25 @@ EOS
       end
     end
 
+    %i(options to_hash).each do |method|
+      describe "##{method}" do
+        it 'returns hash of service options' do
+          expect(service.send(method)).to eq ({
+            label:             'com.example.service',
+            program_arguments: ['service'],
+            keep_alive:        true
+          })
+        end
+      end
+    end
+
     describe '#properties' do
-      it 'returns hash of service properties' do
+      it 'returns hash of service properties via CamelCase-Keys' do
         expect(service.send(:properties)).to eq(
           {
-            'Label' => 'com.example.service',
-            'KeepAlive' => true,
-            'ProgramArguments' => ['service']
+            'Label'            => 'com.example.service',
+            'ProgramArguments' => ['service'],
+            'KeepAlive'        => true
           })
       end
     end

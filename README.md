@@ -23,16 +23,25 @@ Or install it yourself as:
 
 ## Usage
 
-Deploy (install & restart) a service:
+Initialize a service object:
 
 ```Ruby
-service = Launchd::Service.new 'com.example.chunkybacon', # Label of service
-  program_arguments: %w(/usr/sbin/chunkyd --bacon), # command line as array
-  keep_alive: true # Shall launchd keep it running?
-service.deploy
+service = Launchd::Service.new,
+  label:             'com.example.chunkybacon',     # Required
+  program_arguments: %w(/usr/sbin/chunkyd --bacon), # Required
+  keep_alive:        true                           # Optional
 ```
 
-**NOTE: All options are also required!**
+Only *label* and *program_arguments* are required. See
+[`man launchd.plist(5)`](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man5/launchd.plist.5.html)
+for all possible properties.
+
+Then stop, overwrite and start the service with the given properties (i.e. for
+deployment):
+
+```Ruby
+service.restart
+```
 
 
 ## Development
