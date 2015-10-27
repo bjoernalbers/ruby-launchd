@@ -44,6 +44,12 @@ service.restart
 ```
 
 
+**IMPORTANT:** If you run the code as root (sudo), the daemon will get installed as
+system-wide service under `/Library/LaunchDaemons`.
+Otherwise it get saved as current user's agent inside `~/Library/LaunchAgents`
+which will only run after login.
+
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies.
